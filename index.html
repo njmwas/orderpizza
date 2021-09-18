@@ -33,16 +33,16 @@
     </nav>
 
     <div class="container">
-
         <div class="p-3">
             <button type="button" class="btn" id="shoppingCartBtn">
                 <span>Shopping Cart</span>
                 <span class="badge bg-secondary" id="cartItems">0</span>
             </button>
-            <span class="badge bg-warning text-dark" id="totalPrice">0</span>
-            <a href="" class="btn btn-primary btn-sm checkoutBtn">Checkout</a>
+            <span class="badge bg-warning text-dark subTotal">0</span>
+            <button disabled class="btn btn-primary btn-sm checkoutBtn">Checkout</button>
         </div>
-        <!-- beginning of the shoppingcart --> 
+
+        <!-- beginning of the shoppingcart -->
         <div id="shoppingCart" class="shadow rounded border border-light bg-white">
             <h3 class="p-3">Shopping Cart</h3>
             <ul class="list-group list-group-flush">
@@ -54,7 +54,8 @@
                             </div>
                         </div>
                         <div class="col-4">
-                            <span class="qty">0</span>
+                            <span class="name">0</span>
+                            <div class="details"></div>
                         </div>
                         <div class="col-6">
                             <span class="price">0</span>
@@ -63,11 +64,26 @@
                 </li>
             </ul>
             <div class="p-3 d-flex justify-content-between">
-                <div id="totalPrice">0</div>
+                <div>Sub Total</div>
+                <div class="subTotal ml-auto">0</div>
+            </div>
+
+            <div class="p-3">
+                <h4>Checkout Details</h4>
+                <h5>Delivery Details</h5>
+                <Select class="form-control" id="deliveryZones">
+                    <option value="">Pick up</option>
+                </Select>
+            </div>
+
+            <div class="p-3 d-flex justify-content-between">
+                <strong>Total Price</strong>
+                <strong id="totalPrice">Total Price</strong>
                 <div>
-                    <button type="button" class="btn btn-sm btn-primary checkoutBtn">Checkout</button>
+                    <button disabled type="button" class="btn btn-sm btn-primary checkoutBtn">Checkout</button>
                 </div>
             </div>
+
         </div>
         <!-- end of the shoppingcart -->
 
@@ -104,10 +120,13 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <label for="toppings">Toppings</label>
+                    <div id="toppings">
+
+                    </div>
+                    <!-- <label for="toppings">Toppings</label>
                     <select name="toppings" id="toppings" class="form-control" id="">
                         <option value="">Select Toppings</option>
-                    </select>
+                    </select> -->
                 </div>
 
                 <div class="form-group d-flex justify-content-between">

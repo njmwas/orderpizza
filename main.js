@@ -20,7 +20,7 @@ function pizzaTypes(name, image, description) {
 }
 pizzaTypes.prototype.price = 0;
 pizzaTypes.prototype.crust = null;
-pizzaTypes.prototype.topping = null;
+pizzaTypes.prototype.topping = [];
 
 function crusts(name, price) {
     this.name = name;
@@ -35,15 +35,21 @@ function toppings(name, price) {
 function Cart(){
     const cart = this;
     this.cartItems = [];
-    /* item = pizza */
+    this.delivery = null;
     this.addToCart = function(item){
         cart.cartItems.push(item);
         $("#cartItems").html(cartItems.length);
     }
 }
 
-const cart = new Cart();
+function zone(zoneName, price){
+    this.zoneName = zoneName;
+    this.price = price;
+}
+
+let cart = new Cart();
 let selectedPizza;
+let cartItemHtml;
 
 const pizzaListing = [
     new pizzaTypes("Haawain",
@@ -65,6 +71,12 @@ const topingsList = [
     new toppings("cheese", 200)
 ];
 
+const zones = [
+    new zone("Zone A", 100),
+    new zone("Zone B", 200),
+    new zone("Zone C", 300)
+]
+
 function populateDropdowns(sizeElement, items, valueFiled, textField, extraField){
     for (let i = 0; i < items.length; i++) {
         let item = items[i];
@@ -78,7 +90,6 @@ function populateDropdowns(sizeElement, items, valueFiled, textField, extraField
 function updateUI(){
     $('#cartItems').html(cart.cartItems.length);
     if(selectedPizza){
-        console.log(selectedPizza);
         let pizzaPrice = 0;
         if(selectedPizza.price){
             pizzaPrice += selectedPizza.price;
@@ -88,23 +99,52 @@ function updateUI(){
             $('#addToCartBtn').attr('disabled', true);
         }
         if(selectedPizza.crust) pizzaPrice += selectedPizza.crust.price;
-        if(selectedPizza.topping) pizzaPrice += selectedPizza.topping.price;
+        if(selectedPizza.topping) pizzaPrice += selectedPizza.topping.reduce((a, b)=>a+b.price, 0);
                 
         $('#pizzaPrice').html(pizzaPrice);
 
     }
 
+    let subTotalPrice = 0;
     let totalPrice = 0;
+    $('#shoppingCart ul.list-group').html('');
     for(let i=0; i<cart.cartItems.length; i++){
         const item = cart.cartItems[i];
-        totalPrice += item.price + item.crust.price + item.topping.price;
+        const crustPrice = item.crust ? item.crust.price : 0;
+        let toppingPrice = 0;
+        if(item.topping.length > 0){
+            toppingPrice = item.topping.reduce((a, b)=>a+b.price, 0);
+        }
+        // const toppingPrice = item.topping ? item.topping.price : 0;
+        subTotalPrice += item.price + crustPrice + toppingPrice;
+
+        $('#shoppingCart ul.list-group').append(cartItemHtml);        
+        $('#shoppingCart ul.list-group li:last img').attr('src', './assets/images/'+item.image);
+        $('#shoppingCart ul.list-group li:last span.name').html(item.name);
+        $('#shoppingCart ul.list-group li:last span.price').html(item.price);
+        if(item.crust) 
+            $('#shoppingCart ul.list-group li:last div.details')
+            .append("Crust:"+item.crust.name)
+
+        if(item.topping) $('#shoppingCart ul.list-group li:last div.details')
+            .append(" Topping:"+item.topping.map(topping=>topping.name).join(','));
+        
     }
-    $('#totalPrice').html(totalPrice);
+
+    $('.checkoutBtn').each(function(){
+        if(cart.cartItems.length > 0)
+            $(this).removeAttr('disabled');
+        else $(this).attr('disabled', true);
+    });
+
+    $('.subTotal').html(subTotalPrice);
+    $('#totalPrice').html(subTotalPrice + (cart.delivery ? cart.delivery.price : 0));
+
 }
 
 $(document).ready(function () {
 
-    const cartItemHtml = $('#shoppingCart .cartItem').prop('outerHTML');
+    cartItemHtml = $('#shoppingCart .cartItem').prop('outerHTML');
     $('#shoppingCart .cartItem').remove();
 
     /* Populating pizza list */
@@ -162,14 +202,34 @@ $(document).ready(function () {
     /* end of Populate sizes */
 
     /* Populate Toppings */
-    populateDropdowns($('select#toppings'), topingsList, 'name', 'name', 'price');
-    $('select#toppings').on('change', function(){
+    // populateDropdowns($('select#toppings'), topingsList, 'name', 'name', 'price');
+    for(let i=0; i<topingsList.length; i++){
+        let topping = topingsList[i];
+        $('#toppings').append(`<div class="form-check">
+        <input class="form-check-input" type="checkbox" value="`+topping.name+`" id="flexCheckDefault`+i+`">
+        <label class="form-check-label" for="flexCheckDefault`+i+`">
+          `+topping.name+`
+        </label>
+      </div>`);
+        
+    }
+
+    $('#toppings .form-check-input').on('change', function(){
+        const isCheck = this.checked;
+        
         const selectedToppingValue = $(this).val();
         let topping = topingsList.find(function(topping){
             if(topping.name == selectedToppingValue) return true;
             else return false;
         });
-        selectedPizza.topping = topping;
+        const indexOfSelectedTopping = selectedPizza.topping.findIndex(function(toppingItem){ 
+            return toppingItem.name == topping.name;
+         });
+
+        if(indexOfSelectedTopping == -1 && isCheck) selectedPizza.topping.push(topping);
+        else if(indexOfSelectedTopping > -1 && !isCheck){
+            selectedPizza.topping.splice(indexOfSelectedTopping, 1);
+        }
         updateUI()
     });
     /* end of Populate sizes */
@@ -182,11 +242,19 @@ $(document).ready(function () {
             if(crust.name == selectedCrustValue) return true;
             else return false;
         });
-        console.log(crust);
         selectedPizza.crust = crust;
         updateUI();
     });
     /* end of Populate sizes */
+
+    /* Populate delivery zones */
+    populateDropdowns($('select#deliveryZones'), zones, 'zoneName', 'zoneName', 'price');
+    $('select#deliveryZones').on("change", function(){
+        cart.delivery = zones.find(z=>z.zoneName == $(this).val());
+        // console.log(cart.delivery);
+        updateUI();
+    });
+    /* End of populate delivery zones */
 
     /* add to cart action */
     const addToCartBtn = $('#addToCartBtn');
@@ -198,6 +266,12 @@ $(document).ready(function () {
 
     $('#shoppingCartBtn').on('click', function(){
         $('#shoppingCart').toggle();
+    });
+
+    $('.checkoutBtn').click(function(){
+        alert('We have received your order');
+        cart = new Cart();
+        updateUI();
     });
 
 });
