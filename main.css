@@ -1,0 +1,18 @@
+.pizzaImg{
+    height: 100px;
+}
+
+#pizza-attributs{
+    display: none;
+}
+
+.pizzaImage{
+    height: 150px; 
+    overflow: hidden;
+}
+
+#shoppingCart{
+    position:absolute;
+    z-index: 1;
+    display: none;
+}
